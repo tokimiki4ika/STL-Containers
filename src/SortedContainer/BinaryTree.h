@@ -62,19 +62,19 @@ public:
         _size = 0;
     }
 
-    iterator insert(const_reference key) {
+    iterator insert(const_reference value) {
         pointer current_node = _root;
         if (empty()) {
-            current_node = _begin = _root = new Node(key);
+            current_node = _begin = _root = new Node(value);
             _begin->_right = _end;
             _end->_parent = _begin;
         } else {
             while (true) {
-                if (Compare{}(key, current_node->_key)) {
+                if (Compare{}(value, current_node->_value)) {
                     if (current_node->_left != nullptr) {
                         current_node = current_node->_left;
                     } else {
-                        current_node->_left = new Node(key, current_node);
+                        current_node->_left = new Node(value, current_node);
                         if (current_node == _begin) {
                             _begin = current_node->_left;
                         }
@@ -85,10 +85,10 @@ public:
                     current_node = current_node->_right;
                 } else {
                     if (current_node->_right == _end) {
-                        _end->_parent = current_node->_right = new Node(key, current_node);
+                        _end->_parent = current_node->_right = new Node(value, current_node);
                         current_node->_right->_right = _end;
                     } else {
-                        current_node->_right = new Node(key, current_node);
+                        current_node->_right = new Node(value, current_node);
                     }
                     current_node = current_node->_right;
                     break;
@@ -158,10 +158,10 @@ template <class Key, class Compare>
 class BinaryTree<Key, Compare>::Node {
 public:
     Node() = default;
-    explicit Node(key_type key) : _key(key) {}
-    Node(key_type key, node_type *node) : _key(key), _parent(node) {}
+    explicit Node(key_type value) : _value(value) {}
+    Node(key_type value, node_type *node) : _value(value), _parent(node) {}
     ~Node() { delete _left; delete _right; }
-    key_type _key{};
+    key_type _value{};
     pointer _left{}, _right{}, _parent{};
 };
 
@@ -183,7 +183,7 @@ public:
         if (current_node == _end && std::is_arithmetic<value_type>{}) {
             return value_type{_size};
         }
-        return current_node->_key;
+        return current_node->_value;
     }
 
     /*virtual */iterator operator++() {
