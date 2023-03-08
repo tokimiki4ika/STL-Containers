@@ -30,13 +30,13 @@ public:
 //    using const_iterator = TreeConstIterator;
 
 protected:
-    iterator CreateIterator(pointer node) { // пока не понятно, надо ли
+    iterator CreateIterator(pointer node) {
         return TreeIterator(node, _begin, _end, _size);
     }
 
-    iterator CreateIterator(pointer node) const {
-        return TreeIterator(node, _begin, _end, _size);
-    }
+//    iterator CreateIterator(pointer node) const {
+//        return TreeIterator(node, _begin, _end, _size);
+//    }
 
 public:
     BinaryTree() {
@@ -135,7 +135,7 @@ public:
         return _size == 0;
     }
 
-    bool empty() const{
+    bool empty() const {
         return _size == 0;
     }
 
