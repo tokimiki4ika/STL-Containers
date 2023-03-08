@@ -165,12 +165,19 @@ public:
         return current_node->_key;
     }
 
-    TreeIterator operator++() {
+    value_type operator*() const {
+        if (current_node == _end && std::is_arithmetic<value_type>{}) {
+            return value_type{_size};
+        }
+        return current_node->_key;
+    }
+
+    iterator operator++() {
         if (current_node == _end) {
             current_node = _begin;
             return *this;
         }
-        node_type *last_position = current_node;
+        pointer last_position{};
         while (current_node->_right == nullptr || current_node->_right == last_position) {
             last_position = current_node;
             current_node = current_node->_parent;
@@ -182,21 +189,18 @@ public:
         return *this;
     }
 
-    TreeIterator operator--() {
+    iterator operator--() {
         if (current_node == _begin) {
             current_node = _end;
-        } else if (current_node->_left != nullptr) {
-            current_node = current_node->_left;
-        } else {
-            node_type *last_position = current_node;
-            current_node = current_node->_parent;
-            if (current_node == nullptr) {
-                throw std::out_of_range("Ты сирота, а ну в детский дом!!"); // такого случая не должно быть
-            }
-            while (current_node->_left == last_position || current_node->_left == nullptr) {
+            return *this;
+        }
+        if (current_node->_left == nullptr) {
+            pointer last_position{};
+            while (current_node->_left == last_position) {
                 last_position = current_node;
                 current_node = current_node->_parent;
             }
+        } else {
             current_node = current_node->_left;
         }
         return *this;
