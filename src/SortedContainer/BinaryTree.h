@@ -27,7 +27,7 @@ public:
     using node_type = Node;
     using pointer = node_type*;
     using iterator = TreeIterator;
-    using const_iterator = TreeConstIterator;
+//    using const_iterator = TreeConstIterator;
 
 protected:
     iterator CreateIterator(pointer node) { // пока не понятно, надо ли
@@ -46,7 +46,7 @@ public:
     }
     BinaryTree(const std::initializer_list<key_type> &items) {
         _begin = _root = _end = new Node();
-        for (reference item : items) {
+        for (key_type item : items) {
             insert(item);
         }
     }
@@ -123,13 +123,13 @@ public:
         return CreateIterator(_end);
     }
 
-    const_iterator cbegin() const noexcept {
-        return begin();
-    }
-
-    const_iterator cend() const noexcept {
-        return end();
-    }
+//    const_iterator cbegin() const noexcept {
+//        return const_iterator(begin());
+//    }
+//
+//    const_iterator cend() const noexcept {
+//        return const_iterator(end());
+//    }
 
     bool empty() {
         return _size == 0;
@@ -186,7 +186,7 @@ public:
         return current_node->_key;
     }
 
-    virtual iterator operator++() {
+    /*virtual */iterator operator++() {
         if (current_node == _end) {
             current_node = _begin;
             return *this;
@@ -203,7 +203,7 @@ public:
         return *this;
     }
 
-    virtual iterator operator++(int) {
+    /*virtual */iterator operator++(int) {
         if (current_node == _end) {
             current_node = _begin;
             return *this;
@@ -220,7 +220,7 @@ public:
         return *this;
     }
 
-    virtual iterator operator--() {
+    /*virtual */iterator operator--() {
         if (current_node == _begin) {
             current_node = _end;
             return *this;
@@ -237,7 +237,7 @@ public:
         return *this;
     }
 
-    virtual iterator operator--(int) {
+    /*virtual */iterator operator--(int) {
         if (current_node == _begin) {
             current_node = _end;
             return *this;
@@ -276,14 +276,22 @@ protected:
     size_type &_size;
 };
 
-template <typename Key, typename Compare>
-class BinaryTree<Key, Compare>::TreeConstIterator : public BinaryTree<Key, Compare>::TreeIterator {
-public:
-    TreeConstIterator operator++() = delete;
-    TreeConstIterator operator++(int) = delete;
-    TreeConstIterator operator--() = delete;
-    TreeConstIterator operator--(int) = delete;
-};
+//template <typename Key, typename Compare>
+//class BinaryTree<Key, Compare>::TreeConstIterator {
+//public:
+//    explicit TreeConstIterator(pointer node) : _ptr(node) {}
+//    explicit TreeConstIterator(iterator ptr) : _ptr(ptr) {}
+//    const const_iterator operator++() { return (const_iterator)++_ptr; }
+//    const const_iterator operator++(int) { return (const_iterator)++_ptr; }
+//    const const_iterator operator--() { return (const_iterator)--_ptr; }
+//    const const_iterator operator--(int) { return (const_iterator)--_ptr; }
+//    key_type operator*() { return *_ptr; }
+//    bool operator==(const_iterator &other) { return _ptr == other._ptr; }
+//    bool operator!=(const_iterator &other) { return _ptr != other._ptr; }
+//
+//private:
+//    iterator _ptr = nullptr;
+//};
 
 } // namespace s21
 
