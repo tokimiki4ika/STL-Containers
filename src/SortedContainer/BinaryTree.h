@@ -1,62 +1,47 @@
-//
-// Created by 12355 on 24.02.2023.
-//
-
-#ifndef CPP2_S21_CONTAINERS_0_BINARYTREE_H
-#define CPP2_S21_CONTAINERS_0_BINARYTREE_H
+#ifndef STL_CONTAINERS_BINARYTREE_H_
+#define STL_CONTAINERS_BINARYTREE_H_
 
 #include  <iostream>
 
-//#include <memory_resource>
-//#include <functional>
-//#include <limits>
+#include <memory_resource>
+#include <functional>
+#include <limits>
 
 namespace s21 {
 template <class Key, class Compare = std::less<Key>>
 class BinaryTree {
+    // pre-implementation =======================================================
+protected:
+    class Node;
 public:
     class TreeIterator;
     class TreeConstIterator;
-private:
-    // node body ================================================================
-    class Node {
-    public:
-        Node() = default;
-        explicit Node(Key key) : _key(key) {}
-        Node(Key key, Node *node) : _key(key), _parent(node) {}
-        ~Node() { delete _left; delete _right; }
-        Key _key{};
-        Node *_left{}, *_right{}, *_parent{};
-    };
-
-
-
-public:
-    // pre-implementation =======================================================
 
     // using ====================================================================
     using key_type = Key;
-    using value_type = Key;
-    using reference = value_type&;
-    using const_reference = const value_type&;
+    using value_type = key_type;
+    using reference = key_type&;
+    using const_reference = const key_type&;
 
     using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
     using node_type = Node;
     using pointer = node_type*;
     using iterator = TreeIterator;
     using const_iterator = const TreeIterator;
 
-
-
+protected:
+    iterator CreateIterator(pointer node) { // private
+        return TreeIterator(node, _begin, _end, _size);
+    }
+public:
     BinaryTree() {
         _begin = _root = _end = new Node();
         _begin->_left = _end;
         _end->_right = _begin;
     }
-    BinaryTree(const std::initializer_list<value_type>& items) {
+    BinaryTree(const std::initializer_list<key_type>& items) {
         _begin = _root = _end = new Node();
-        for (value_type item : items) {
+        for (key_type item : items) {
             insert(item);
         }
     }
@@ -77,12 +62,12 @@ public:
 //    }
 
     iterator insert(const_reference key) {
-        if (_begin == _end) {
-            _begin = _root = new Node(key);
+        pointer current_node = _root;
+        if (current_node == _end) {
+            current_node = _begin = _root = new Node(key);
             _begin->_right = _end;
             _end->_parent = _begin;
         } else {
-            Node *current_node = _root;
             while (true) {
                 if (Compare{}(key, current_node->_key)) {
                     if (current_node->_left != nullptr) {
@@ -92,6 +77,7 @@ public:
                         if (current_node == _begin) {
                             _begin = current_node->_left;
                         }
+                        current_node = current_node->_left;
                         break;
                     }
                 } else if (current_node->_right != nullptr && current_node->_right != _end) {
@@ -99,18 +85,17 @@ public:
                 } else {
                     if (current_node->_right == _end) {
                         _end->_parent = current_node->_right = new Node(key, current_node);
+                        current_node->_right->_right = _end;
                     } else {
                         current_node->_right = new Node(key, current_node);
                     }
+                    current_node = current_node->_right;
                     break;
                 }
             }
         }
         ++_size;
-    }
-
-    TreeIterator CreateIterator(node_type *node) {
-        return TreeIterator(node, _begin, _end, _size);
+        return CreateIterator(current_node);
     }
 
     size_type size() noexcept {
@@ -138,11 +123,25 @@ public:
     }
 
     size_type max_size() {
-        return std::numeric_limits<std::size_t>::max() / sizeof(value_type) / 2;
+        return std::numeric_limits<size_type>::max() / sizeof(key_type) / 2;
     }
-private:
-    node_type *_root{}, *_begin{}, *_end{};
+
+protected:
+    pointer _root{}, _begin{}, _end{};
     size_type _size{};
+};
+
+// node =====================================================================
+
+template <class Key, class Compare>
+class BinaryTree<Key, Compare>::Node {
+public:
+    Node() = default;
+    explicit Node(key_type key) : _key(key) {}
+    Node(key_type key, node_type *node) : _key(key), _parent(node) {}
+    ~Node() { delete _left; delete _right; }
+    key_type _key{};
+    pointer _left{}, _right{}, _parent{};
 };
 
 // iterators ================================================================
@@ -159,11 +158,9 @@ public:
             : current_node(other.current_node), _begin(other._begin), _end(other._end), _size(other._size) {}
     ~TreeIterator() = default;
 
-    Key operator*() {
-        if (current_node == _end) {
-            return _size;
-        } else if (current_node == nullptr) {
-            throw std::out_of_range("Дружище, ты куда собрался?"); // такого случая не должно быть
+    value_type operator*() {
+        if (current_node == _end && std::is_arithmetic<value_type>{}) {
+            return value_type{_size};
         }
         return current_node->_key;
     }
@@ -171,18 +168,16 @@ public:
     TreeIterator operator++() {
         if (current_node == _end) {
             current_node = _begin;
-        } else if (current_node->_right != nullptr) {
-            current_node = current_node->_right;
-        } else {
-            node_type *last_position = current_node;
+            return *this;
+        }
+        node_type *last_position = current_node;
+        while (current_node->_right == nullptr || current_node->_right == last_position) {
+            last_position = current_node;
             current_node = current_node->_parent;
-            if (current_node == nullptr) {
-                throw std::out_of_range("Ты сирота, а ну в детский дом!!"); // такого случая не должно быть
-            }
-            while (current_node->_right == last_position) {
-                last_position = current_node;
-                current_node = current_node->_parent;
-            }
+        }
+        current_node = current_node->_right;
+        while (current_node->_left != nullptr) {
+            current_node = current_node->_left;
         }
         return *this;
     }
@@ -215,10 +210,9 @@ public:
         return other.current_node == current_node;
     }
 
-private:
+protected:
     pointer current_node;
-    pointer &_end;
-    pointer &_begin;
+    const pointer &_end, &_begin;
     size_type &_size;
 };
 
@@ -229,4 +223,4 @@ private:
 
 } // namespace s21
 
-#endif //CPP2_S21_CONTAINERS_0_BINARYTREE_H
+#endif //STL_CONTAINERS_BINARYTREEE_H_
