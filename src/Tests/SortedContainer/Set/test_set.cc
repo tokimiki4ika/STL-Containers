@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "./../../../s21_containers.h"
+#include "./../../../containers.h"
 
 TEST(Set, default_constructor) {
     s21::set<int> basic;

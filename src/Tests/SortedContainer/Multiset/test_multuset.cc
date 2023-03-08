@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "./../../../s21_containersplus.h"
+#include "./../../../containersplus.h"
 
 TEST(Multiset, default_constructor) {
     s21::multiset<int> basic;

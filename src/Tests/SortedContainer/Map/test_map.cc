@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "./../../../s21_containers.h"
+#include "./../../../containers.h"
 
 TEST(Map, default_constructor_instructor_insert) {
     s21::map<int, int> basic;
