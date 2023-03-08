@@ -27,21 +27,26 @@ public:
     using node_type = Node;
     using pointer = node_type*;
     using iterator = TreeIterator;
-    using const_iterator = const TreeIterator;
+    using const_iterator = TreeConstIterator;
 
 protected:
-    iterator CreateIterator(pointer node) { // private
+    iterator CreateIterator(pointer node) { // пока не понятно, надо ли
         return TreeIterator(node, _begin, _end, _size);
     }
+
+    iterator CreateIterator(pointer node) const {
+        return TreeIterator(node, _begin, _end, _size);
+    }
+
 public:
     BinaryTree() {
         _begin = _root = _end = new Node();
         _begin->_left = _end;
         _end->_right = _begin;
     }
-    BinaryTree(const std::initializer_list<key_type>& items) {
+    BinaryTree(const std::initializer_list<key_type> &items) {
         _begin = _root = _end = new Node();
-        for (key_type item : items) {
+        for (reference item : items) {
             insert(item);
         }
     }
@@ -57,13 +62,9 @@ public:
         _size = 0;
     }
 
-//    iterator lower_bound(const_reference key) {
-//        return TreeIterator(begin()); // недоделка
-//    }
-
     iterator insert(const_reference key) {
         pointer current_node = _root;
-        if (current_node == _end) {
+        if (empty()) {
             current_node = _begin = _root = new Node(key);
             _begin->_right = _end;
             _end->_parent = _begin;
@@ -102,7 +103,15 @@ public:
         return _size;
     }
 
+    size_type size() const noexcept {
+        return _size;
+    }
+
     iterator begin() {
+        return CreateIterator(_begin);
+    }
+
+    iterator begin() const {
         return CreateIterator(_begin);
     }
 
@@ -110,19 +119,31 @@ public:
         return CreateIterator(_end);
     }
 
-//    iterator cbegin() const noexcept {
-//        return TreeIterator(_begin);
-//    }
-//
-//    iterator cend() const noexcept {
-//        return TreeIterator(_end);
-//    }
+    iterator end() const {
+        return CreateIterator(_end);
+    }
+
+    const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    const_iterator cend() const noexcept {
+        return end();
+    }
 
     bool empty() {
         return _size == 0;
     }
 
+    bool empty() const{
+        return _size == 0;
+    }
+
     size_type max_size() {
+        return std::numeric_limits<size_type>::max() / sizeof(key_type) / 2;
+    }
+
+    size_type max_size() const {
         return std::numeric_limits<size_type>::max() / sizeof(key_type) / 2;
     }
 
@@ -165,14 +186,7 @@ public:
         return current_node->_key;
     }
 
-    value_type operator*() const {
-        if (current_node == _end && std::is_arithmetic<value_type>{}) {
-            return value_type{_size};
-        }
-        return current_node->_key;
-    }
-
-    iterator operator++() {
+    virtual iterator operator++() {
         if (current_node == _end) {
             current_node = _begin;
             return *this;
@@ -189,7 +203,41 @@ public:
         return *this;
     }
 
-    iterator operator--() {
+    virtual iterator operator++(int) {
+        if (current_node == _end) {
+            current_node = _begin;
+            return *this;
+        }
+        pointer last_position{};
+        while (current_node->_right == nullptr || current_node->_right == last_position) {
+            last_position = current_node;
+            current_node = current_node->_parent;
+        }
+        current_node = current_node->_right;
+        while (current_node->_left != nullptr) {
+            current_node = current_node->_left;
+        }
+        return *this;
+    }
+
+    virtual iterator operator--() {
+        if (current_node == _begin) {
+            current_node = _end;
+            return *this;
+        }
+        if (current_node->_left == nullptr) {
+            pointer last_position{};
+            while (current_node->_left == last_position) {
+                last_position = current_node;
+                current_node = current_node->_parent;
+            }
+        } else {
+            current_node = current_node->_left;
+        }
+        return *this;
+    }
+
+    virtual iterator operator--(int) {
         if (current_node == _begin) {
             current_node = _end;
             return *this;
@@ -210,7 +258,15 @@ public:
         return other.current_node != current_node;
     }
 
+    bool operator!=(TreeIterator other) const {
+        return other.current_node != current_node;
+    }
+
     bool operator==(TreeIterator other) {
+        return other.current_node == current_node;
+    }
+
+    bool operator==(TreeIterator other) const {
         return other.current_node == current_node;
     }
 
@@ -220,10 +276,14 @@ protected:
     size_type &_size;
 };
 
-//template <typename Key, typename Compare>
-//class BinaryTree<Key, Compare>::TreeConstIterator {
-//
-//};
+template <typename Key, typename Compare>
+class BinaryTree<Key, Compare>::TreeConstIterator : public BinaryTree<Key, Compare>::TreeIterator {
+public:
+    TreeConstIterator operator++() = delete;
+    TreeConstIterator operator++(int) = delete;
+    TreeConstIterator operator--() = delete;
+    TreeConstIterator operator--(int) = delete;
+};
 
 } // namespace s21
 
