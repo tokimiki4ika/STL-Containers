@@ -27,9 +27,17 @@ public:
     using node_type = Node;
     using pointer = node_type*;
     using iterator = TreeIterator;
-//    using const_iterator = TreeConstIterator;
+    using const_iterator = TreeConstIterator;
 
 protected:
+//    const_iterator CreateConstIterator(pointer node) {
+//        return TreeConstIterator(node, _begin, _end, _size);
+//    }
+
+//    const_iterator CreateConstIterator(pointer node) const {
+//        return TreeConstIterator(node, _begin, _end, _size);
+//    }
+
     iterator CreateIterator(pointer node) {
         return TreeIterator(node, _begin, _end, _size);
     }
@@ -64,7 +72,7 @@ public:
 
     iterator insert(const_reference value) {
         pointer current_node = _root;
-        if (empty()) {
+        if (_root == _end) {
             current_node = _begin = _root = new Node(value);
             _begin->_right = _end;
             _end->_parent = _begin;
@@ -123,12 +131,20 @@ public:
         return CreateIterator(_end);
     }
 
-//    const_iterator cbegin() const noexcept {
-//        return const_iterator(begin());
+//    const_iterator cbegin() {
+//        return CreateIterator(_begin);
 //    }
 //
-//    const_iterator cend() const noexcept {
-//        return const_iterator(end());
+//    const_iterator cbegin() const {
+//        return CreateIterator(_begin);
+//    }
+//
+//    const_iterator cend() {
+//        return CreateIterator(_end);
+//    }
+//
+//    const_iterator cend() const {
+//        return CreateIterator(_end);
 //    }
 
     bool empty() {
@@ -180,13 +196,32 @@ public:
     ~TreeIterator() = default;
 
     value_type operator*() {
-        if (current_node == _end && std::is_arithmetic<value_type>{}) {
+        if (current_node == _end/* && std::is_arithmetic<value_type>{}*/) {
             return value_type{_size};
         }
         return current_node->_value;
     }
 
-    /*virtual */iterator operator++() {
+    /*virtual */TreeIterator operator++() {
+        if (current_node == _end) {
+            current_node = _begin;
+            return *this;
+        }
+        while (current_node->_right == nullptr) {
+            pointer last_position = current_node;
+            current_node = current_node->_parent;
+            if (current_node->_right != last_position) {
+                return *this;
+            }
+        }
+        current_node = current_node->_right;
+        while (current_node->_left != nullptr) {
+            current_node = current_node->_left;
+        }
+        return *this;
+    }
+
+    /*virtual */TreeIterator operator++(int) {
         if (current_node == _end) {
             current_node = _begin;
             return *this;
@@ -203,24 +238,7 @@ public:
         return *this;
     }
 
-    /*virtual */iterator operator++(int) {
-        if (current_node == _end) {
-            current_node = _begin;
-            return *this;
-        }
-        pointer last_position{};
-        while (current_node->_right == nullptr || current_node->_right == last_position) {
-            last_position = current_node;
-            current_node = current_node->_parent;
-        }
-        current_node = current_node->_right;
-        while (current_node->_left != nullptr) {
-            current_node = current_node->_left;
-        }
-        return *this;
-    }
-
-    /*virtual */iterator operator--() {
+    /*virtual */TreeIterator operator--() {
         if (current_node == _begin) {
             current_node = _end;
             return *this;
@@ -237,7 +255,7 @@ public:
         return *this;
     }
 
-    /*virtual */iterator operator--(int) {
+    /*virtual */TreeIterator operator--(int) {
         if (current_node == _begin) {
             current_node = _end;
             return *this;
@@ -273,25 +291,20 @@ public:
 protected:
     pointer current_node;
     const pointer &_end, &_begin;
-    size_type &_size;
+    const size_type &_size;
 };
 
-//template <typename Key, typename Compare>
-//class BinaryTree<Key, Compare>::TreeConstIterator {
-//public:
-//    explicit TreeConstIterator(pointer node) : _ptr(node) {}
-//    explicit TreeConstIterator(iterator ptr) : _ptr(ptr) {}
-//    const const_iterator operator++() { return (const_iterator)++_ptr; }
-//    const const_iterator operator++(int) { return (const_iterator)++_ptr; }
-//    const const_iterator operator--() { return (const_iterator)--_ptr; }
-//    const const_iterator operator--(int) { return (const_iterator)--_ptr; }
-//    key_type operator*() { return *_ptr; }
-//    bool operator==(const_iterator &other) { return _ptr == other._ptr; }
-//    bool operator!=(const_iterator &other) { return _ptr != other._ptr; }
-//
-//private:
-//    iterator _ptr = nullptr;
-//};
+template <class Key, class Compare> // пока не понятно что с этим делать
+class BinaryTree<Key, Compare>::TreeConstIterator : public BinaryTree<Key, Compare>::TreeIterator {
+public:
+    TreeConstIterator() : TreeIterator() {}
+//    TreeConstIterator(pointer current, pointer &begin, pointer &end, size_type &size) {
+//        BinaryTree<Key, Compare>::TreeIterator::current_node = current;
+//        BinaryTree<Key, Compare>::TreeIterator::_end = end;
+//        BinaryTree<Key, Compare>::TreeIterator::_begin = begin;
+//        BinaryTree<Key, Compare>::TreeIterator::_size = size;
+//    }
+};
 
 } // namespace s21
 
