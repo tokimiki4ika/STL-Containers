@@ -44,7 +44,7 @@ public:
     }
 
 protected:
-    pointer FindFirstNotComparePointer(const_reference value) const noexcept {
+    pointer FindFirstNotCompareOrEqualPointer(const_reference value) const noexcept {
         pointer current_node = _root;
         while (current_node != _end) {
             if (Compare{}(value, current_node->_value)) {
@@ -53,6 +53,11 @@ protected:
                 } else {
                     break;
                 }
+            } else if (value == current_node->_value) {
+                while (current_node->_left != nullptr && current_node->_left->_value == current_node->_value) {
+                    current_node = current_node->_left;
+                }
+                return current_node;
             } else if (current_node->_right != nullptr && current_node->_right != _end) {
                 current_node = current_node->_right;
             } else {
@@ -72,36 +77,28 @@ public:
     }
 
     iterator find(const key_type& key) {
-        pointer current = FindFirstNotComparePointer(key);
-        iterator prev = CreateIterator(current), next = CreateIterator(current);
-        if (*--prev == key) {
-            return prev;
-        } else if (*++next == key) {
-            return next;
+        pointer current = FindFirstNotCompareOrEqualPointer(key);
+        if (current->_value == key) {
+            return CreateIterator(current);
         }
         return end();
     }
 
     iterator lower_bound(const key_type& key) {
-        iterator prev = find(key), next = prev;
-        if (*prev == key) {
-            return prev;
-        }
-        if (*--prev >= key) {
-            return prev;
-        }
-        return ++next;
+        pointer current = FindFirstNotCompareOrEqualPointer(key);
+        return CreateIterator(current);
     }
 
     iterator upper_bound(const key_type& key) {
-        iterator prev = find(key), next = prev;
-        if (*prev >= key) {
-            return prev;
+        pointer current = FindFirstNotCompareOrEqualPointer(key);
+        iterator prev = CreateIterator(current), next = prev;
+        while (*prev == key) {
+            --prev;
         }
-        if (--prev != end() && *prev >= key) {
-            return prev;
+        while (*next == key) {
+            ++next;
         }
-        return ++next;
+        return *prev > *next ? prev : next;
     }
 
     iterator insert(const_reference value) {
@@ -114,13 +111,21 @@ public:
             _begin->_right = _end;
             _end->_parent = _begin;
         } else {
-            current_node = FindFirstNotComparePointer(value);
+            current_node = FindFirstNotCompareOrEqualPointer(value);
             if (Compare{}(value, current_node->_value)) {
                 current_node->_left = new Node(value, current_node);
                 current_node = current_node->_left;
                 if (current_node->_parent == _begin) {
                     _begin = current_node;
                 }
+            } else if (value == current_node->_value) {
+                pointer buff = current_node->_left;
+                current_node->_left = new Node(value, current_node);
+                current_node->_left->_left = buff;
+                if (buff) {
+                    buff->_parent = current_node->_left;
+                }
+                current_node->_left->_left = buff;
             } else {
                 if (current_node->_right == _end) {
                     _end->_parent = current_node->_right = new Node(value, current_node);
@@ -207,8 +212,9 @@ public:
             current_node = _begin;
             return *this;
         }
-        while (current_node->_right == nullptr) {
-            pointer last_position = current_node;
+        pointer last_position{};
+        while (current_node->_right == nullptr || last_position == current_node->_right) {
+            last_position = current_node;
             current_node = current_node->_parent;
             if (current_node->_right != last_position) {
                 return *this;
@@ -226,8 +232,9 @@ public:
             current_node = _begin;
             return *this;
         }
-        while (current_node->_right == nullptr) {
-            pointer last_position = current_node;
+        pointer last_position{};
+        while (current_node->_right == nullptr || last_position == current_node->_right) {
+            last_position = current_node;
             current_node = current_node->_parent;
             if (current_node->_right != last_position) {
                 return *this;
