@@ -131,17 +131,17 @@ public:
         return CreateIterator(_end);
     }
 
-//    const_iterator cbegin() {
-//        return CreateIterator(_begin);
-//    }
+    const_iterator cbegin() {
+        return TreeConstIterator(_begin, _begin, _end, _size);
+    }
 //
 //    const_iterator cbegin() const {
 //        return CreateIterator(_begin);
 //    }
 //
-//    const_iterator cend() {
-//        return CreateIterator(_end);
-//    }
+    const_iterator cend() {
+        return TreeConstIterator(_end, _begin, _end, _size);
+    }
 //
 //    const_iterator cend() const {
 //        return CreateIterator(_end);
@@ -297,13 +297,9 @@ protected:
 template <class Key, class Compare> // пока не понятно что с этим делать
 class BinaryTree<Key, Compare>::TreeConstIterator : public BinaryTree<Key, Compare>::TreeIterator {
 public:
-    TreeConstIterator() : TreeIterator() {}
-//    TreeConstIterator(pointer current, pointer &begin, pointer &end, size_type &size) {
-//        BinaryTree<Key, Compare>::TreeIterator::current_node = current;
-//        BinaryTree<Key, Compare>::TreeIterator::_end = end;
-//        BinaryTree<Key, Compare>::TreeIterator::_begin = begin;
-//        BinaryTree<Key, Compare>::TreeIterator::_size = size;
-//    }
+    TreeConstIterator() = delete;
+    TreeConstIterator(pointer current, pointer &begin, pointer &end, size_type &size)
+    : BinaryTree<Key, Compare>::TreeIterator(current, begin, end, size) {}
 };
 
 } // namespace s21
