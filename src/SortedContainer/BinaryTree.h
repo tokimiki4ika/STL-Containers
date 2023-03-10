@@ -9,10 +9,9 @@ class BinaryTree {
     // pre-implementation =======================================================
 protected:
     class Node;
-public:
     class TreeIterator;
     class TreeConstIterator;
-
+public:
     // using ====================================================================
     using key_type = Key;
     using value_type = Key;
