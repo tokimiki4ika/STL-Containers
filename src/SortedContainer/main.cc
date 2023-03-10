@@ -7,7 +7,7 @@
 #include "BinaryTree.h"
 
 int main() {
-    s21::BinaryTree<int/*, std::greater<>*/> a {2, 3, 4, 1};
+    s21::BinaryTree<int, std::greater<>> a {2, 3, 4, 1};
 //    std::multiset<int, std::greater<>> a {2, 3, 4, 1};
     a.clear();
     std::cout << a.empty() << " " << a.max_size() << std::endl;
@@ -26,7 +26,7 @@ int main() {
 //    auto it = a.lower_bound(1), end = a.upper_bound(6);
     for (; it != end;) {
         std::cout << "value: " << *it << std::endl;
-        ++it;
+        --it;
     }
 //    std::cout << "size: " << *end << std::endl;
 //    ++it;
