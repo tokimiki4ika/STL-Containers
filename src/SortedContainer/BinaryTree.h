@@ -43,6 +43,27 @@ public:
         delete _root;
     }
 
+protected:
+    pointer FindFirstNotComparePointer(const_reference value) const noexcept {
+        pointer current_node = _root;
+        while (current_node != _end) {
+            if (Compare{}(value, current_node->_value)) {
+                if (current_node->_left != nullptr) {
+                    current_node = current_node->_left;
+                } else {
+                    break;
+                }
+            } else if (current_node->_right != nullptr && current_node->_right != _end) {
+                current_node = current_node->_right;
+            } else {
+                break;
+            }
+        }
+        return current_node;
+    }
+
+public:
+
     void clear() {
         _end->_parent->_right = nullptr;
         delete _root;
@@ -50,40 +71,64 @@ public:
         _size = 0;
     }
 
+    iterator find(const key_type& key) {
+        pointer current = FindFirstNotComparePointer(key);
+        iterator prev = CreateIterator(current), next = CreateIterator(current);
+        if (*--prev == key) {
+            return prev;
+        } else if (*++next == key) {
+            return next;
+        }
+        return end();
+    }
+
+    iterator lower_bound(const key_type& key) {
+        iterator prev = find(key), next = prev;
+        if (*prev == key) {
+            return prev;
+        }
+        if (*--prev >= key) {
+            return prev;
+        }
+        return ++next;
+    }
+
+    iterator upper_bound(const key_type& key) {
+        iterator prev = find(key), next = prev;
+        if (*prev >= key) {
+            return prev;
+        }
+        if (--prev != end() && *prev >= key) {
+            return prev;
+        }
+        return ++next;
+    }
+
     iterator insert(const_reference value) {
         if (max_size() == _size) {
             throw std::overflow_error("Can't insert new element, because size will over max_size");
         }
-        pointer current_node = _root;
+        pointer current_node;
         if (_root == _end) {
             current_node = _begin = _root = new Node(value);
             _begin->_right = _end;
             _end->_parent = _begin;
         } else {
-            while (true) {
-                if (Compare{}(value, current_node->_value)) {
-                    if (current_node->_left != nullptr) {
-                        current_node = current_node->_left;
-                    } else {
-                        current_node->_left = new Node(value, current_node);
-                        if (current_node == _begin) {
-                            _begin = current_node->_left;
-                        }
-                        current_node = current_node->_left;
-                        break;
-                    }
-                } else if (current_node->_right != nullptr && current_node->_right != _end) {
-                    current_node = current_node->_right;
-                } else {
-                    if (current_node->_right == _end) {
-                        _end->_parent = current_node->_right = new Node(value, current_node);
-                        current_node->_right->_right = _end;
-                    } else {
-                        current_node->_right = new Node(value, current_node);
-                    }
-                    current_node = current_node->_right;
-                    break;
+            current_node = FindFirstNotComparePointer(value);
+            if (Compare{}(value, current_node->_value)) {
+                current_node->_left = new Node(value, current_node);
+                current_node = current_node->_left;
+                if (current_node->_parent == _begin) {
+                    _begin = current_node;
                 }
+            } else {
+                if (current_node->_right == _end) {
+                    _end->_parent = current_node->_right = new Node(value, current_node);
+                    current_node->_right->_right = _end;
+                } else {
+                    current_node->_right = new Node(value, current_node);
+                }
+                current_node = current_node->_right;
             }
         }
         ++_size;
@@ -94,19 +139,19 @@ public:
         return _size;
     }
 
-    [[nodiscard]] iterator begin() {
+    [[nodiscard]] iterator begin() noexcept {
         return CreateIterator(_begin);
     }
 
-    [[nodiscard]] iterator end() {
+    [[nodiscard]] iterator end() noexcept {
         return CreateIterator(_end);
     }
 
-    [[nodiscard]] const_iterator cbegin() {
+    [[nodiscard]] const_iterator cbegin() noexcept {
         return CreateIterator(_begin);
     }
 
-    [[nodiscard]] const_iterator cend() {
+    [[nodiscard]] const_iterator cend() noexcept {
         return CreateIterator(_end);
     }
 
