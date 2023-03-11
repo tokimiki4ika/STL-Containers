@@ -265,7 +265,9 @@ public:
     }
 
     TreeIterator operator++(int) {
-        return ++*this;
+        iterator it = *this;
+        ++*this;
+        return it;
     }
 
     TreeIterator operator--() {
@@ -286,7 +288,9 @@ public:
     }
 
     TreeIterator operator--(int) {
-        return --*this;
+        iterator it = *this;
+        ++--this;
+        return it;
     }
 
     [[nodiscard]] bool operator!=(TreeIterator other) const noexcept {
