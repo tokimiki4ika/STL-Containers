@@ -4,7 +4,7 @@
 #include <limits>
 
 namespace s21 {
-template <class Key, class Compare = std::less<Key>>
+template <class Key>
 class BinaryTree {
     // pre-implementation =======================================================
 protected:
@@ -24,11 +24,6 @@ public:
     using iterator = TreeIterator;
     using const_iterator = TreeConstIterator;
 
-protected:
-    const_iterator CreateIterator(pointer node) noexcept {
-        return TreeConstIterator(node, _begin, _end, _size);
-    }
-
 public:
     BinaryTree() {
         _begin = _root = _end = new Node();
@@ -44,7 +39,13 @@ public:
     }
 
 protected:
-    pointer FindFirstNotCompareOrEqualPointer(const_reference value) const noexcept {
+    using Compare = std::less<Key>;
+
+    const_iterator CreateIterator(pointer node) noexcept {
+        return TreeConstIterator(node, _begin, _end, _size);
+    }
+
+    pointer FindFirstEqualOrNextPointer(const_reference value) const noexcept {
         pointer current_node = _root;
         while (current_node != _end) {
             if (Compare{}(value, current_node->_value)) {
@@ -54,9 +55,6 @@ protected:
                     break;
                 }
             } else if (value == current_node->_value) {
-                while (current_node->_left != nullptr && current_node->_left->_value == current_node->_value) {
-                    current_node = current_node->_left;
-                }
                 return current_node;
             } else if (current_node->_right != nullptr && current_node->_right != _end) {
                 current_node = current_node->_right;
@@ -70,35 +68,64 @@ protected:
 public:
 
     void clear() {
-        _end->_parent->_right = nullptr;
+        _end->_parent = _end->_parent->_right = nullptr;
         delete _root;
         _begin = _root = _end;
         _size = 0;
     }
 
+    bool contains(const key_type& key) {
+        pointer current = FindFirstEqualOrNextPointer(key);
+        return key == current->_value;
+    }
+
+    size_type count(const Key& key) {
+        iterator iter = find(key);
+        size_type size{};
+        while (*iter == key && iter != end()) {
+            ++iter, ++size;
+        }
+        return size;
+    }
+
     iterator find(const key_type& key) {
-        pointer current = FindFirstNotCompareOrEqualPointer(key);
+        pointer current = FindFirstEqualOrNextPointer(key);
         if (current->_value == key) {
+            while (current->_left) {
+                if (current->_left->_value == key) {
+                    current = current->_left;
+                } else {
+                    break;
+                }
+            }
             return CreateIterator(current);
         }
         return end();
     }
 
     iterator lower_bound(const key_type& key) {
-        pointer current = FindFirstNotCompareOrEqualPointer(key);
+        pointer current = FindFirstEqualOrNextPointer(key);
+        while (current->_left) {
+            if (current->_left->_value == key) {
+                current = current->_left;
+            } else {
+                break;
+            }
+        }
         return CreateIterator(current);
     }
 
     iterator upper_bound(const key_type& key) {
-        pointer current = FindFirstNotCompareOrEqualPointer(key);
-        iterator prev = CreateIterator(current), next = prev;
-        while (*prev == key) {
-            --prev;
+        pointer current = FindFirstEqualOrNextPointer(key);
+        iterator iter = CreateIterator(current);
+        if (current->_value == key) {
+            ++iter;
         }
-        while (*next == key) {
-            ++next;
-        }
-        return *prev > *next ? prev : next;
+        return iter;
+    }
+
+    std::pair<iterator,iterator> equal_range(const key_type& key) {
+        return std::pair<iterator, iterator>{lower_bound(key), upper_bound(key)};
     }
 
     iterator insert(const_reference value) {
@@ -111,7 +138,7 @@ public:
             _begin->_right = _end;
             _end->_parent = _begin;
         } else {
-            current_node = FindFirstNotCompareOrEqualPointer(value);
+            current_node = FindFirstEqualOrNextPointer(value);
             if (Compare{}(value, current_node->_value)) {
                 current_node->_left = new Node(value, current_node);
                 current_node = current_node->_left;
@@ -124,6 +151,9 @@ public:
                 current_node->_left->_left = buff;
                 if (buff) {
                     buff->_parent = current_node->_left;
+                }
+                if (current_node == _begin) {
+                    _begin = current_node->_left;
                 }
                 current_node->_left->_left = buff;
             } else {
@@ -175,8 +205,8 @@ protected:
 
 // node =====================================================================
 
-template <class Key, class Compare>
-class BinaryTree<Key, Compare>::Node {
+template <class Key>
+class BinaryTree<Key>::Node {
 public:
     Node() = default;
     explicit Node(key_type value) : _value(value) {}
@@ -188,8 +218,8 @@ public:
 
 // iterators ================================================================
 
-template <class Key, class Compare>
-class BinaryTree<Key, Compare>::TreeIterator {
+template <class Key>
+class BinaryTree<Key>::TreeIterator {
 public:
     TreeIterator() = delete;
     TreeIterator(pointer current, pointer &begin, pointer &end, size_type &size) noexcept
@@ -294,12 +324,12 @@ protected:
     size_type &_size;
 };
 
-template <class Key, class Compare>
-class BinaryTree<Key, Compare>::TreeConstIterator : public BinaryTree<Key, Compare>::TreeIterator {
+template <class Key>
+class BinaryTree<Key>::TreeConstIterator : public BinaryTree<Key>::TreeIterator {
 public:
     TreeConstIterator() = delete;
     TreeConstIterator(pointer current, pointer &begin, pointer &end, size_type &size) noexcept
-    : BinaryTree<Key, Compare>::TreeIterator(current, begin, end, size) {}
+    : BinaryTree<Key>::TreeIterator(current, begin, end, size) {}
     TreeConstIterator(TreeConstIterator &other) noexcept {
         this->current_node = other.current_node;
         this->_begin = other._begin;
