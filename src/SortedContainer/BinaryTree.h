@@ -289,15 +289,15 @@ public:
 
     TreeIterator operator--(int) {
         iterator it = *this;
-        ++--this;
+        --*this;
         return it;
     }
 
-    [[nodiscard]] bool operator!=(TreeIterator other) const noexcept {
+    [[nodiscard]] bool operator!=(const TreeIterator other) const noexcept {
         return other.current_node != current_node;
     }
 
-    [[nodiscard]] bool operator==(TreeIterator other) const noexcept {
+    [[nodiscard]] bool operator==(const TreeIterator other) const noexcept {
         return other.current_node == current_node;
     }
 
