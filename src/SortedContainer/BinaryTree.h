@@ -2,6 +2,9 @@
 #define STL_CONTAINERS_BINARYTREE_H_
 
 #include <limits>
+#include <initializer_list>
+#include <functional>
+#include <stdexcept>
 
 namespace s21 {
 template <class Key>
@@ -79,7 +82,7 @@ public:
         return key == current->_value;
     }
 
-    size_type count(const Key& key) {
+    virtual size_type count(const Key& key) {
         iterator iter = find(key);
         size_type size{};
         while (*iter == key && iter != end()) {
@@ -88,7 +91,7 @@ public:
         return size;
     }
 
-    iterator find(const key_type& key) {
+    virtual iterator find(const key_type& key) {
         pointer current = FindFirstEqualOrNextPointer(key);
         if (current->_value == key) {
             while (current->_left) {
@@ -103,7 +106,7 @@ public:
         return end();
     }
 
-    iterator lower_bound(const key_type& key) {
+    virtual iterator lower_bound(const key_type& key) {
         pointer current = FindFirstEqualOrNextPointer(key);
         while (current->_left) {
             if (current->_left->_value == key) {
@@ -115,11 +118,15 @@ public:
         return CreateIterator(current);
     }
 
-    iterator upper_bound(const key_type& key) {
+    virtual iterator upper_bound(const key_type& key) {
         pointer current = FindFirstEqualOrNextPointer(key);
         iterator iter = CreateIterator(current);
-        if (current->_value == key) {
-            ++iter;
+        while (iter != end()) {
+            if (*iter == key) {
+                ++iter;
+            } else {
+                break;
+            }
         }
         return iter;
     }
@@ -128,10 +135,10 @@ public:
         return std::pair<iterator, iterator>{lower_bound(key), upper_bound(key)};
     }
 
-    iterator insert(const_reference value) {
+    virtual iterator insert(const_reference value) {
         if (max_size() == _size) {
             throw std::overflow_error("Can't insert new element, because size will over max_size");
-        }
+        } // пока не разобрался, но думаю нужно заменить
         pointer current_node;
         if (_root == _end) {
             current_node = _begin = _root = new Node(value);
@@ -258,23 +265,7 @@ public:
     }
 
     TreeIterator operator++(int) {
-        if (current_node == _end) {
-            current_node = _begin;
-            return *this;
-        }
-        pointer last_position{};
-        while (current_node->_right == nullptr || last_position == current_node->_right) {
-            last_position = current_node;
-            current_node = current_node->_parent;
-            if (current_node->_right != last_position) {
-                return *this;
-            }
-        }
-        current_node = current_node->_right;
-        while (current_node->_left != nullptr) {
-            current_node = current_node->_left;
-        }
-        return *this;
+        return ++*this;
     }
 
     TreeIterator operator--() {
@@ -295,20 +286,7 @@ public:
     }
 
     TreeIterator operator--(int) {
-        if (current_node == _begin) {
-            current_node = _end;
-            return *this;
-        }
-        if (current_node->_left == nullptr) {
-            pointer last_position{};
-            while (current_node->_left == last_position) {
-                last_position = current_node;
-                current_node = current_node->_parent;
-            }
-        } else {
-            current_node = current_node->_left;
-        }
-        return *this;
+        return --*this;
     }
 
     [[nodiscard]] bool operator!=(TreeIterator other) const noexcept {
