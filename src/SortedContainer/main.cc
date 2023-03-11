@@ -34,9 +34,9 @@ int main() {
 //    auto it = a.begin(), end = a.end();
     auto b = a.equal_range(0);
     for (; b.first != b.second;) {
-        std::cout << "value: " << *b.first << std::endl;
-        ++b.first;
-//        --it;
+        if (b.first != b.second) {
+            std::cout << "value: " << *b.first++ << std::endl;
+        }
     }
     std::cout << "count 0: " << a.count(0) << std::endl;
 //    std::cout << "size: " << *end << std::endl;

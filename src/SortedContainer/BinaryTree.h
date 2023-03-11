@@ -77,133 +77,135 @@ public:
         _size = 0;
     }
 
-    bool contains(const key_type& key) {
+   virtual bool contains(const key_type& key) {
         pointer current = FindFirstEqualOrNextPointer(key);
         return key == current->_value;
-    }
+   }
 
-    virtual size_type count(const Key& key) {
-        iterator iter = find(key);
-        size_type size{};
-        while (*iter == key && iter != end()) {
-            ++iter, ++size;
-        }
-        return size;
-    }
+   void erase(iterator pos) {}
 
-    virtual iterator find(const key_type& key) {
-        pointer current = FindFirstEqualOrNextPointer(key);
-        if (current->_value == key) {
-            while (current->_left) {
-                if (current->_left->_value == key) {
-                    current = current->_left;
-                } else {
-                    break;
-                }
-            }
-            return CreateIterator(current);
-        }
-        return end();
-    }
+   virtual size_type count(const key_type& key) {
+       iterator iter = find(key);
+       size_type size{};
+       while (*iter == key && iter != end()) {
+           ++iter, ++size;
+       }
+       return size;
+   }
 
-    virtual iterator lower_bound(const key_type& key) {
-        pointer current = FindFirstEqualOrNextPointer(key);
-        while (current->_left) {
-            if (current->_left->_value == key) {
-                current = current->_left;
-            } else {
-                break;
-            }
-        }
-        return CreateIterator(current);
-    }
+   virtual iterator find(const key_type& key) {
+       pointer current = FindFirstEqualOrNextPointer(key);
+       if (current->_value == key) {
+           while (current->_left) {
+               if (current->_left->_value == key) {
+                   current = current->_left;
+               } else {
+                   break;
+               }
+           }
+           return CreateIterator(current);
+       }
+       return end();
+   }
 
-    virtual iterator upper_bound(const key_type& key) {
-        pointer current = FindFirstEqualOrNextPointer(key);
-        iterator iter = CreateIterator(current);
-        while (iter != end()) {
-            if (*iter == key) {
-                ++iter;
-            } else {
-                break;
-            }
-        }
-        return iter;
-    }
+   virtual iterator lower_bound(const key_type& key) {
+       pointer current = FindFirstEqualOrNextPointer(key);
+       while (current->_left) {
+           if (current->_left->_value == key) {
+               current = current->_left;
+           } else {
+               break;
+           }
+       }
+       return CreateIterator(current);
+   }
 
-    std::pair<iterator,iterator> equal_range(const key_type& key) {
-        return std::pair<iterator, iterator>{lower_bound(key), upper_bound(key)};
-    }
+   virtual iterator upper_bound(const key_type& key) {
+       pointer current = FindFirstEqualOrNextPointer(key);
+       iterator iter = CreateIterator(current);
+       while (iter != end()) {
+           if (*iter == key) {
+               ++iter;
+           } else {
+               break;
+           }
+       }
+       return iter;
+   }
 
-    virtual iterator insert(const_reference value) {
-        if (max_size() == _size) {
-            throw std::overflow_error("Can't insert new element, because size will over max_size");
-        } // пока не разобрался, но думаю нужно заменить
-        pointer current_node;
-        if (_root == _end) {
-            current_node = _begin = _root = new Node(value);
-            _begin->_right = _end;
-            _end->_parent = _begin;
-        } else {
-            current_node = FindFirstEqualOrNextPointer(value);
-            if (Compare{}(value, current_node->_value)) {
-                current_node->_left = new Node(value, current_node);
-                current_node = current_node->_left;
-                if (current_node->_parent == _begin) {
-                    _begin = current_node;
-                }
-            } else if (value == current_node->_value) {
-                pointer buff = current_node->_left;
-                current_node->_left = new Node(value, current_node);
-                current_node->_left->_left = buff;
-                if (buff) {
-                    buff->_parent = current_node->_left;
-                }
-                if (current_node == _begin) {
-                    _begin = current_node->_left;
-                }
-                current_node->_left->_left = buff;
-            } else {
-                if (current_node->_right == _end) {
-                    _end->_parent = current_node->_right = new Node(value, current_node);
-                    current_node->_right->_right = _end;
-                } else {
-                    current_node->_right = new Node(value, current_node);
-                }
-                current_node = current_node->_right;
-            }
-        }
-        ++_size;
-        return CreateIterator(current_node);
-    }
+   std::pair<iterator,iterator> equal_range(const key_type& key) {
+       return std::pair<iterator, iterator>{lower_bound(key), upper_bound(key)};
+   }
 
-    [[nodiscard]] size_type size() const noexcept {
-        return _size;
-    }
+   virtual iterator insert(const_reference value) {
+       if (max_size() == _size) {
+           throw std::overflow_error("Can't insert new element, because size will over max_size");
+       } // пока не разобрался, но думаю нужно заменить
+       pointer current_node;
+       if (_root == _end) {
+           current_node = _begin = _root = new Node(value);
+           _begin->_right = _end;
+           _end->_parent = _begin;
+       } else {
+           current_node = FindFirstEqualOrNextPointer(value);
+           if (Compare{}(value, current_node->_value)) {
+               current_node->_left = new Node(value, current_node);
+               current_node = current_node->_left;
+               if (current_node->_parent == _begin) {
+                   _begin = current_node;
+               }
+           } else if (value == current_node->_value) {
+               pointer buff = current_node->_left;
+               current_node->_left = new Node(value, current_node);
+               current_node->_left->_left = buff;
+               if (buff) {
+                   buff->_parent = current_node->_left;
+               }
+               if (current_node == _begin) {
+                   _begin = current_node->_left;
+               }
+               current_node->_left->_left = buff;
+           } else {
+               if (current_node->_right == _end) {
+                   _end->_parent = current_node->_right = new Node(value, current_node);
+                   current_node->_right->_right = _end;
+               } else {
+                   current_node->_right = new Node(value, current_node);
+               }
+               current_node = current_node->_right;
+           }
+       }
+       ++_size;
+       return CreateIterator(current_node);
+   }
 
-    [[nodiscard]] iterator begin() noexcept {
-        return CreateIterator(_begin);
-    }
+   [[nodiscard]] size_type size() const noexcept {
+       return _size;
+   }
 
-    [[nodiscard]] iterator end() noexcept {
-        return CreateIterator(_end);
-    }
+   [[nodiscard]] iterator begin() noexcept {
+       return CreateIterator(_begin);
+   }
 
-    [[nodiscard]] const_iterator cbegin() noexcept {
-        return CreateIterator(_begin);
-    }
+   [[nodiscard]] iterator end() noexcept {
+       return CreateIterator(_end);
+   }
 
-    [[nodiscard]] const_iterator cend() noexcept {
-        return CreateIterator(_end);
-    }
+   [[nodiscard]] const_iterator cbegin() noexcept {
+       return CreateIterator(_begin);
+   }
 
-    [[nodiscard]] bool empty() const noexcept {
-        return _size == 0;
-    }
+   [[nodiscard]] const_iterator cend() noexcept {
+       return CreateIterator(_end);
+   }
 
-    [[nodiscard]] size_type max_size() const noexcept {
-        return std::numeric_limits<size_type>::max() / sizeof(node_type) / 2;
-    }
+   [[nodiscard]] bool empty() const noexcept {
+       return _size == 0;
+   }
+
+   [[nodiscard]] size_type max_size() const noexcept {
+       return std::numeric_limits<size_type>::max() / sizeof(node_type) / 2;
+   }
 
 protected:
     pointer _root{}, _begin{}, _end{};
