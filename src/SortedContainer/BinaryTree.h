@@ -10,11 +10,11 @@ namespace s21 {
 template <class Key>
 class BinaryTree {
     // pre-implementation =======================================================
-protected:
+//protected:
+public:
     class Node;
     class TreeIterator;
     class TreeConstIterator;
-public:
     // using ====================================================================
     using key_type = Key;
     using value_type = Key;
@@ -37,15 +37,37 @@ public:
             insert(item);
         }
     }
+    BinaryTree(BinaryTree &bt) {
+        _begin = _end = _root = CopyAllChild(bt._root);
+        _size = bt._size;
+        while (_end->_left) _end = _end->_left;
+        while (_begin->_right) _begin = _begin->_right;
+    }
     ~BinaryTree() {
         delete _root;
     }
 
 protected:
+    pointer CopyAllChild(pointer parent) {
+        pointer childLeft{}, childRight{};
+        if (parent->_left) childLeft = CopyAllChild(parent->_left);
+        if (parent->_right) childRight = CopyAllChild(parent->_right);
+        pointer tmp_parent;
+        tmp_parent = new Node(parent->_value);
+        tmp_parent->_left = childLeft;
+        tmp_parent->_right = childRight;
+        if (childLeft) childLeft->_parent = tmp_parent;
+        if (childRight) childRight->_parent = tmp_parent;
+        return tmp_parent;
+    }
     using Compare = std::less<Key>;
 
-    const_iterator CreateIterator(pointer node) noexcept {
+    const_iterator CreateConstIterator(pointer node) noexcept {
         return TreeConstIterator(node, _begin, _end, _size);
+    }
+
+    iterator CreateIterator(pointer node) noexcept {
+        return TreeIterator(node, _begin, _end, _size);
     }
 
     pointer FindFirstEqualOrNextPointer(const_reference value) const noexcept {
@@ -82,7 +104,7 @@ public:
         return key == current->_value;
    }
 
-   void erase(iterator pos) {}
+//   void erase(iterator pos) {}
 
    virtual size_type count(const key_type& key) {
        iterator iter = find(key);
@@ -133,7 +155,7 @@ public:
        return iter;
    }
 
-   std::pair<iterator,iterator> equal_range(const key_type& key) {
+   std::pair<iterator, iterator> equal_range(const key_type& key) {
        return std::pair<iterator, iterator>{lower_bound(key), upper_bound(key)};
    }
 
@@ -192,11 +214,11 @@ public:
    }
 
    [[nodiscard]] const_iterator cbegin() noexcept {
-       return CreateIterator(_begin);
+       return CreateConstIterator(_begin);
    }
 
    [[nodiscard]] const_iterator cend() noexcept {
-       return CreateIterator(_end);
+       return CreateConstIterator(_end);
    }
 
    [[nodiscard]] bool empty() const noexcept {
@@ -237,6 +259,16 @@ public:
     : current_node(other.current_node), _begin(other._begin), _end(other._end), _size(other._size) {}
     TreeIterator(TreeIterator &&other)  noexcept
     : current_node(other.current_node), _begin(other._begin), _end(other._end), _size(other._size) {}
+    TreeIterator& operator=(TreeIterator &iter) noexcept {
+        current_node = iter.current_node;
+        _begin = iter._begin;
+        _end = iter._end;
+        _size = iter._size;
+        return *this;
+    }
+    TreeIterator& operator=(TreeIterator &&iter) noexcept {
+        return *this = iter;
+    }
     ~TreeIterator() = default;
 
     [[nodiscard]] value_type operator*() const {

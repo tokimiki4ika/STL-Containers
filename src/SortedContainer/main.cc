@@ -32,7 +32,9 @@ int main() {
 //            it5 = a.upper_bound(9),
 //    end = a.upper_bound(2);
 //    auto it = a.begin(), end = a.end();
-    auto b = a.equal_range(0);
+
+//    s21::BinaryTree<int> c{a};
+    std::pair<s21::BinaryTree<int>::iterator, s21::BinaryTree<int>::iterator> b = a.equal_range(0);
     for (; b.first != b.second;) {
         if (b.first != b.second) {
             std::cout << "value: " << *b.first++ << std::endl;
